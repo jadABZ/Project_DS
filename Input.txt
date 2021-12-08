@@ -1,0 +1,4 @@
+1,aaa,AAA,a.AAA@mail.com#meeting1,100:17:0:0,3600!2
+2,bbb,BBB,b.BBB@mail.com
+3,ccc,CCC,c.CCC@mail.com
+4,ddd,DDD,d.DDD@mail.com
