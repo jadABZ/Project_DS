@@ -51,8 +51,11 @@ void UpdateOutputFile(string, Company); //function 9
 
 void InitializeCompany(Company &com)
 {
+	//initialize appointments
+	//com.Head->Calendar = NULL;
 	com.Head = NULL;
 	com.Tail = NULL;
+
 }
 
 bool CompanyIsEmpty(Company com)
@@ -84,6 +87,9 @@ Company ParseInputFile(string filename)
 		cur->next = NULL;
 		cur->previous = NULL;
 
+		cur->Calendar = new Appointment;
+		cur->Calendar->next = NULL;
+
 		getline(inFile, line);
 		stringstream ss(line);
 
@@ -91,12 +97,24 @@ Company ParseInputFile(string filename)
 		getline(ss, firstname, ',');
 		getline(ss, lastname, ',');
 		getline(ss, email, '#');
+		getline(ss, meetingTitle, ',');
+		getline(ss, meetingDay, ',');
+		getline(ss, meetingHour, ',');
+		getline(ss, meetingMinute, ',');
+		getline(ss, meetingSecond, ',');
+		getline(ss, meetingDuration, '!');
 
 		//now convert the strings into the convenient types and place them to their employee
 		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
 		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
 		strcpy(cur->LastName, lastname.c_str());
 		strcpy(cur->EmailAddress, email.c_str());
+		strcpy(cur->Calendar->Title, meetingTitle.c_str());
+		cur->Calendar->StartingTime.Day = stoi(meetingDay);
+		cur->Calendar->StartingTime.Hour = stoi(meetingHour);
+		cur->Calendar->StartingTime.Minute = stoi(meetingMinute);
+		cur->Calendar->StartingTime.Second = stoi(meetingSecond);
+		cur->Calendar->Duration = stoi(meetingDuration);
 
 		com.Head = cur;
 		com.Tail = com.Head;
@@ -108,17 +126,33 @@ Company ParseInputFile(string filename)
 		cur = new Employee;
 		cur->next = NULL;
 		cur->previous = NULL;
+
+		cur->Calendar = new Appointment;
+		cur->Calendar->next = NULL;
+
 		stringstream ss(line);
 		getline(ss, id, ',');
 		getline(ss, firstname, ',');
 		getline(ss, lastname, ',');
 		getline(ss, email, '#');
+		getline(ss, meetingTitle, ',');
+		getline(ss, meetingDay, ',');
+		getline(ss, meetingHour, ',');
+		getline(ss, meetingMinute, ',');
+		getline(ss, meetingSecond, ',');
+		getline(ss, meetingDuration, '!');
 
 		//now convert the strings into the convenient types and place them to their employee
 		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
 		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
 		strcpy(cur->LastName, lastname.c_str());
 		strcpy(cur->EmailAddress, email.c_str());
+		strcpy(cur->Calendar->Title, meetingTitle.c_str());
+		cur->Calendar->StartingTime.Day = stoi(meetingDay);
+		cur->Calendar->StartingTime.Hour = stoi(meetingHour);
+		cur->Calendar->StartingTime.Minute = stoi(meetingMinute);
+		cur->Calendar->StartingTime.Second = stoi(meetingSecond);
+		cur->Calendar->Duration = stoi(meetingDuration);
 
 		cur->previous = com.Tail;
 		com.Tail->next = cur;
@@ -141,6 +175,10 @@ int main()
 		cout << counter->FirstName << endl;
 		cout << counter->LastName << endl;
 		cout << counter->EmailAddress << endl;
+		cout << "Will attend the following meeting:\n";
+		cout<<counter->Calendar->Title <<endl;
+		cout << "on day " << counter->Calendar->StartingTime.Day<<endl;
+		cout << "at time: " << counter->Calendar->StartingTime.Hour << ":" << counter->Calendar->StartingTime.Minute << ":" << counter->Calendar->StartingTime.Second <<endl;
 		cout << "----------------------------------\n";
 	}
 
