@@ -179,6 +179,7 @@ int main()
 		cout<<counter->Calendar->Title <<endl;
 		cout << "on day " << counter->Calendar->StartingTime.Day<<endl;
 		cout << "at time: " << counter->Calendar->StartingTime.Hour << ":" << counter->Calendar->StartingTime.Minute << ":" << counter->Calendar->StartingTime.Second <<endl;
+		cout << "Meeting Duration:" << counter->Calendar->Duration<<endl;
 		cout << "----------------------------------\n";
 	}
 
