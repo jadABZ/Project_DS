@@ -1,4 +1,4 @@
-1,aaa,AAA,a.AAA@mail.com#meeting1,100,8,45,0,3600!2,3#
-2,bbb,BBB,b.BBB@mail.com#meeting2,121,17,15,0,5400!3,1,5#
-3,ccc,CCC,c.CCC@mail.com#meeting3,45,16,0,0,9000!1,4#
+1,aaa,AAA,a.AAA@mail.com#meeting1,100,8,45,0,3600!2,3
+2,bbb,BBB,b.BBB@mail.com#meeting2,121,17,15,0,5400!3,1,5
+3,ccc,CCC,c.CCC@mail.com#meeting3,45,16,0,0,9000!1,4
 4,ddd,DDD,d.DDD@mail.com#meeting4,77,11,30,0,3600!

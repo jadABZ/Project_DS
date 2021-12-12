@@ -56,7 +56,7 @@ void InitializeCompany(Company& com)
 	com.Tail = NULL;
 }
 
-void InitializeCalendar(Appointment* &ap)
+void InitializeCalendar(Appointment*& ap)
 {
 	ap = NULL;
 }
@@ -124,7 +124,6 @@ Company ParseInputFile(string filename)
 			exit(1);
 		cal->next = NULL;
 
-		
 
 		getline(inFile, line);
 		stringstream ss(line);
@@ -139,7 +138,7 @@ Company ParseInputFile(string filename)
 		getline(ss, meetingMinute, ',');
 		getline(ss, meetingSecond, ',');
 		getline(ss, meetingDuration, '!');
-		
+
 
 		//now convert the strings into the convenient types and place them to their employee
 		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
@@ -154,9 +153,9 @@ Company ParseInputFile(string filename)
 		cal->StartingTime.Second = stoi(meetingSecond);
 		cal->Duration = stoi(meetingDuration);
 
-		cur->Calendar = cal;
+		//cur->Calendar = cal;
 
-		InitializeAttendees(cur->Calendar->ListOfAttendees, cur);
+		InitializeAttendees(cal->ListOfAttendees, cur);
 
 		while (getline(ss, meetingAttendeeID, ','))
 		{
@@ -168,9 +167,11 @@ Company ParseInputFile(string filename)
 				exit(1);
 			tmpEm->UniqueID = stoi(meetingAttendeeID);
 			tmpAt->self = tmpEm;
-			tmpAt->next = cur->Calendar->ListOfAttendees;
-			cur->Calendar->ListOfAttendees = tmpAt;
+			tmpAt->next = cal->ListOfAttendees;
+			cal->ListOfAttendees = tmpAt;
 		}
+		cal->next = cur->Calendar;
+		cur->Calendar = cal;
 
 		com.Head = cur;
 		com.Tail = com.Head;
@@ -213,12 +214,12 @@ Company ParseInputFile(string filename)
 		cal->StartingTime.Day = stoi(meetingDay);
 		cal->StartingTime.Hour = stoi(meetingHour);
 		cal->StartingTime.Minute = stoi(meetingMinute);
-		cal ->StartingTime.Second = stoi(meetingSecond);
+		cal->StartingTime.Second = stoi(meetingSecond);
 		cal->Duration = stoi(meetingDuration);
 
-		cur->Calendar = cal;
+		//cur->Calendar = cal;
 
-		InitializeAttendees(cur->Calendar->ListOfAttendees, cur);
+		InitializeAttendees(cal->ListOfAttendees, cur);
 
 		while (getline(ss, meetingAttendeeID, ','))
 		{
@@ -230,9 +231,12 @@ Company ParseInputFile(string filename)
 				exit(1);
 			tmpEm->UniqueID = stoi(meetingAttendeeID);
 			tmpAt->self = tmpEm;
-			tmpAt->next = cur->Calendar->ListOfAttendees;
-			cur->Calendar->ListOfAttendees = tmpAt;
+			tmpAt->next = cal->ListOfAttendees;
+			cal->ListOfAttendees = tmpAt;
 		}
+
+		cal->next = cur->Calendar;
+		cur->Calendar = cal;
 
 		cur->previous = com.Tail;
 		com.Tail->next = cur;
@@ -265,9 +269,9 @@ int main()
 		{
 			cout << i->self->UniqueID << endl;
 		}
-		
+
 		cout << "----------------------------------\n";
 	}
-	
+
 	return 0;
 }
