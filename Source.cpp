@@ -61,9 +61,18 @@ void InitializeCalendar(Appointment* &ap)
 	ap = NULL;
 }
 
-void InitializeAttendees(Attendee*& at)
+void InitializeAttendees(Attendee*& at, Employee* self)
 {
 	at = NULL;
+
+	Attendee* tmp = new Attendee;
+	if (tmp == NULL)
+		exit(1);
+
+	tmp->self = self;
+
+	tmp->next = at;
+	at = tmp;
 }
 
 bool CompanyIsEmpty(Company com)
@@ -97,7 +106,7 @@ Company ParseInputFile(string filename)
 
 	Employee* cur;
 	Appointment* cal;
-	Attendee* att;
+
 	string id, firstname, lastname, email, meetingTitle, meetingDay, meetingHour, meetingMinute, meetingSecond, meetingDuration, meetingAttendeeID; //these strings are used to temporarily store components from the input file
 
 	//start by populating the the head of the company
@@ -115,10 +124,7 @@ Company ParseInputFile(string filename)
 			exit(1);
 		cal->next = NULL;
 
-		att = new Attendee;
-		if (att == NULL)
-			exit(1);
-		att->next = NULL;
+		
 
 		getline(inFile, line);
 		stringstream ss(line);
@@ -133,6 +139,7 @@ Company ParseInputFile(string filename)
 		getline(ss, meetingMinute, ',');
 		getline(ss, meetingSecond, ',');
 		getline(ss, meetingDuration, '!');
+		
 
 		//now convert the strings into the convenient types and place them to their employee
 		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
@@ -147,12 +154,23 @@ Company ParseInputFile(string filename)
 		cal->StartingTime.Second = stoi(meetingSecond);
 		cal->Duration = stoi(meetingDuration);
 
-		att->self = cur;
-
 		cur->Calendar = cal;
 
-		att->next = cur->Calendar->ListOfAttendees;
-		cur->Calendar->ListOfAttendees = att;
+		InitializeAttendees(cur->Calendar->ListOfAttendees, cur);
+
+		while (getline(ss, meetingAttendeeID, ','))
+		{
+			Attendee* tmpAt = new Attendee;
+			if (tmpAt == NULL)
+				exit(1);
+			Employee* tmpEm = new Employee;
+			if (tmpEm == NULL)
+				exit(1);
+			tmpEm->UniqueID = stoi(meetingAttendeeID);
+			tmpAt->self = tmpEm;
+			tmpAt->next = cur->Calendar->ListOfAttendees;
+			cur->Calendar->ListOfAttendees = tmpAt;
+		}
 
 		com.Head = cur;
 		com.Tail = com.Head;
@@ -172,10 +190,6 @@ Company ParseInputFile(string filename)
 			exit(1);
 		cal->next = NULL;
 
-		att = new Attendee;
-		if (att == NULL)
-			exit(1);
-		att->next = NULL;
 
 		stringstream ss(line);
 		getline(ss, id, ',');
@@ -202,12 +216,23 @@ Company ParseInputFile(string filename)
 		cal ->StartingTime.Second = stoi(meetingSecond);
 		cal->Duration = stoi(meetingDuration);
 
-		att->self = cur;
-
 		cur->Calendar = cal;
 
-		att->next = cur->Calendar->ListOfAttendees;
-		cur->Calendar->ListOfAttendees = att;
+		InitializeAttendees(cur->Calendar->ListOfAttendees, cur);
+
+		while (getline(ss, meetingAttendeeID, ','))
+		{
+			Attendee* tmpAt = new Attendee;
+			if (tmpAt == NULL)
+				exit(1);
+			Employee* tmpEm = new Employee;
+			if (tmpEm == NULL)
+				exit(1);
+			tmpEm->UniqueID = stoi(meetingAttendeeID);
+			tmpAt->self = tmpEm;
+			tmpAt->next = cur->Calendar->ListOfAttendees;
+			cur->Calendar->ListOfAttendees = tmpAt;
+		}
 
 		cur->previous = com.Tail;
 		com.Tail->next = cur;
@@ -236,9 +261,13 @@ int main()
 		cout << "at time: " << counter->Calendar->StartingTime.Hour << ":" << counter->Calendar->StartingTime.Minute << ":" << counter->Calendar->StartingTime.Second << endl;
 		cout << "Meeting Duration:" << counter->Calendar->Duration << endl;
 		cout << "Meeting Attendees:\n";
-		cout << counter->Calendar->ListOfAttendees->self->UniqueID <<endl;
+		for (Attendee* i = counter->Calendar->ListOfAttendees; i != NULL; i = i->next)
+		{
+			cout << i->self->UniqueID << endl;
+		}
+		
 		cout << "----------------------------------\n";
 	}
-
+	
 	return 0;
 }
