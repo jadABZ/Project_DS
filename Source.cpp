@@ -40,7 +40,7 @@ struct Appointment
 void InitializeCompany(Company&); //function 0
 bool CompanyIsEmpty(Company); //function 00
 Company ParseInputFile(string); // function 1
-Employee SearchForEmployee(); //function 2
+Employee* SearchForEmployee(Company, int); //function 2
 void AddEmployee(Company&, Employee); //function 3
 void DeleteEmployee(Company&, Employee); //function 4
 void AddMeeting(Company&, Appointment*); //function 5
@@ -154,7 +154,7 @@ Company ParseInputFile(string filename)
 
 				InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
+				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) !=-1)
 				{
 
 					Attendee* tmpAt = new Attendee;
@@ -219,7 +219,7 @@ Company ParseInputFile(string filename)
 
 			InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
+			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != -1)
 			{
 				Attendee* tmpAt = new Attendee;
 				if (tmpAt == NULL)
