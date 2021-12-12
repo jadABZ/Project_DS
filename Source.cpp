@@ -146,7 +146,6 @@ Company ParseInputFile(string filename)
 				getline(ss, meetingDuration, '!');
 
 				strcpy(tmpCal->Title, meetingTitle.c_str());
-				//cout << cal->Title <<endl;
 				tmpCal->StartingTime.Day = stoi(meetingDay);
 				tmpCal->StartingTime.Hour = stoi(meetingHour);
 				tmpCal->StartingTime.Minute = stoi(meetingMinute);
@@ -155,10 +154,8 @@ Company ParseInputFile(string filename)
 
 				InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-				while (getline(ss, meetingAttendeeID, ','))
+				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
 				{
-					if (stoi(meetingAttendeeID) == 0)
-						break;
 
 					Attendee* tmpAt = new Attendee;
 					if (tmpAt == NULL)
@@ -222,11 +219,8 @@ Company ParseInputFile(string filename)
 
 			InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-			while (getline(ss, meetingAttendeeID, ','))
+			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
 			{
-				if (stoi(meetingAttendeeID) == 0)
-					break;
-
 				Attendee* tmpAt = new Attendee;
 				if (tmpAt == NULL)
 					exit(1);
