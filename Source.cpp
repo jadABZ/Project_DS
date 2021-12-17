@@ -122,6 +122,156 @@ int inputID(Company c)
 	return id;
 }
 
+//only used to print date in appropriate format
+std::string DateFormat(Appointment ap)
+{
+	time_t now = time(0);
+	tm* ltm = localtime(&now);
+
+	
+	const int MAXDAYS = 365;
+	const int MAXDAYSleap = 366;
+
+	//the day of 365 or 366 in which each month ends
+	const int JAN = 31;
+	int FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC;
+
+	std::string date;
+	int  month, day;
+
+	if ((1900 + ltm->tm_year) % 4 != 0)
+	{
+		FEB = 59;
+		MAR = 90;
+		APR = 120;
+		MAY = 151;
+		JUN = 181;
+		JUL = 212;
+		AUG = 243;
+		SEP = 273;
+		OCT = 304;
+		NOV = 334;
+		DEC = 365;
+	}
+	else
+	{
+		FEB = 60;
+		MAR = 91;
+		APR = 121;
+		MAY = 152;
+		JUN = 182;
+		JUL = 213;
+		AUG = 244;
+		SEP = 274;
+		OCT = 305;
+		NOV = 335;
+		DEC = 366;
+	}
+	
+
+	if (ap.StartingTime.Day>=1 && ap.StartingTime.Day <= JAN)
+	{
+		month = 1;
+		day = ap.StartingTime.Day;
+	}		
+	if (ap.StartingTime.Day >= JAN + 1 && ap.StartingTime.Day <= FEB)
+	{
+		month = 2;
+		day = ap.StartingTime.Day - JAN;
+	}
+	if (ap.StartingTime.Day >= FEB + 1 && ap.StartingTime.Day <= MAR)
+	{
+		month = 3;
+		day = ap.StartingTime.Day - FEB;
+	}
+	if (ap.StartingTime.Day >= MAR + 1 && ap.StartingTime.Day <= APR)
+	{
+		month = 4;
+		day = ap.StartingTime.Day - MAR;
+	}
+	if (ap.StartingTime.Day >= APR + 1 && ap.StartingTime.Day <= MAY)
+	{
+		month = 5;
+		day = ap.StartingTime.Day - APR;
+	}
+	if (ap.StartingTime.Day >= MAY + 1 && ap.StartingTime.Day <= JUN)
+	{
+		month = 6;
+		day = ap.StartingTime.Day - MAY;
+	}
+	if (ap.StartingTime.Day >= JUN + 1 && ap.StartingTime.Day <= JUL)
+	{
+		month = 7;
+		day = ap.StartingTime.Day - JUN;
+	}
+	if (ap.StartingTime.Day >= JUL + 1 && ap.StartingTime.Day <= AUG)
+	{
+		month = 8;
+		day = ap.StartingTime.Day - JUL;
+	}
+	if (ap.StartingTime.Day >= AUG + 1 && ap.StartingTime.Day <= SEP)
+	{
+		month = 9;
+		day = ap.StartingTime.Day - AUG;
+	}
+	if (ap.StartingTime.Day >= SEP+ 1 && ap.StartingTime.Day <= OCT)
+	{
+		month = 10;
+		day = ap.StartingTime.Day - SEP;
+	}
+	if (ap.StartingTime.Day >= OCT + 1 && ap.StartingTime.Day <= NOV)
+	{
+		month = 11;
+		day = ap.StartingTime.Day - OCT;
+	}
+	if (ap.StartingTime.Day >= NOV + 1 && ap.StartingTime.Day <= DEC)
+	{
+		month = 12;
+		day = ap.StartingTime.Day - NOV;
+	}
+		
+	date = std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(1900 + ltm->tm_year) + " at ";
+	if (ap.StartingTime.Hour < 10)
+		date += "0" + std::to_string(ap.StartingTime.Hour) + ":";
+	else
+		date += std::to_string(ap.StartingTime.Hour) + ":";
+	if(ap.StartingTime.Minute < 10)
+		date += "0" + std::to_string(ap.StartingTime.Minute) + ":";
+	else
+		date += std::to_string(ap.StartingTime.Minute) + ":";
+	if (ap.StartingTime.Second < 10)
+		date += "0" + std::to_string(ap.StartingTime.Second);
+	else
+		date += std::to_string(ap.StartingTime.Second);
+
+	return date;
+}
+
+std::string DurationFormat(Appointment ap)
+{
+	int hour, minute, second;
+	std::string dur;
+
+	hour = ap.Duration / 3600;
+	minute = (ap.Duration - hour * 3600) / 60;
+	second = ap.Duration - hour *3600 - minute * 60;
+
+	if (hour < 10)
+		dur += "0" + std::to_string(hour) + ":";
+	else
+		dur += std::to_string(hour) + ":";
+	if (minute < 10)
+		dur += "0" + std::to_string(minute) + ":";
+	else
+		dur += std::to_string(minute) + ":";
+	if (second < 10)
+		dur += "0" + std::to_string(second);
+	else
+		dur += std::to_string(second);
+
+	return dur;
+}
+
 void InputAttendees(Company c, Attendee* &head) //the attendees to add to a meeting must be already created in the company
 {
 	char x;
@@ -288,7 +438,7 @@ Company ParseInputFile(std::string filename)
 
 				InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) !=-1)
+				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) !=0)
 				{
 
 					Attendee* tmpAt = new Attendee;
@@ -353,7 +503,7 @@ Company ParseInputFile(std::string filename)
 
 			InitializeAttendees(tmpCal->ListOfAttendees, cur);
 
-			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != -1)
+			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
 			{
 				Attendee* tmpAt = new Attendee;
 				if (tmpAt == NULL)
@@ -411,10 +561,9 @@ void PrintEmployeeDetails(Company myCompany)
 		for (Appointment* j = counter->Calendar; j != NULL; j = j->next)
 		{
 			std::cout << j->Title << std::endl;
-			std::cout << "on day " << j->StartingTime.Day << std::endl;
-			std::cout << "at time: " << j->StartingTime.Hour << ":" << counter->Calendar->StartingTime.Minute << ":" << counter->Calendar->StartingTime.Second << std::endl;
-			std::cout << "Meeting Duration:" << j->Duration << std::endl;
-			std::cout << "Meeting Attendees:\n";
+			std::cout << "Meeting date: " << DateFormat(*j) << "(local time) ";
+			std::cout << "Duration: " << DurationFormat(*j) << std::endl;
+;			std::cout << "Meeting Attendees:\n";
 			for (Attendee* i = j->ListOfAttendees; i != NULL; i = i->next)
 			{
 				std::cout << i->self->UniqueID << " ";
