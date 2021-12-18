@@ -90,6 +90,27 @@ bool AttendeesIsEmpty(Attendee* at)
 	return(at == NULL);
 }
 
+void UpdateOutputFile(std::string filename, Company com)
+{
+	std::ofstream toFile(filename + ".txt");
+	for (Employee* e = com.Head; e != NULL; e = e->next)
+	{
+		toFile << e->UniqueID << "," << e->FirstName << "," << e->LastName << "," << e->EmailAddress<<"#";
+		for (Appointment* ap = e->Calendar; ap != NULL; ap = ap->next)
+		{
+			toFile << ap->Title << "|" << ap->StartingTime.Day << "," << ap->StartingTime.Hour << "," << ap->StartingTime.Minute << "," << ap->StartingTime.Second << "," << ap->Duration << "!";
+			for (Attendee* at = ap->ListOfAttendees; at != NULL; at = at->next)
+			{
+				toFile << at->self->UniqueID << ",";
+			}
+			toFile << "0,";
+		}
+		toFile << "mmm|" << std::endl;
+	}
+
+	toFile.close();
+}
+
 Company ParseInputFile(std::string filename)
 {
 	Company com;
@@ -356,17 +377,22 @@ void AddMeeting(Company& c)
 
 	// add the meeting to all the attendees' calendars
 
-	for (Attendee* at = newAp->ListOfAttendees; at != NULL; at = at->next)
-	{
-		for (Employee* e = c.Head; e != NULL; e = e->next)
+	
+		for (Attendee* at = newAp->ListOfAttendees; at != NULL; at = at->next)
 		{
-			if (at->self->UniqueID == e->UniqueID)
+			for (Employee* e = c.Head; e != NULL; e = e->next)	
 			{
-				newAp->next = e->Calendar;
-				e->Calendar = newAp;
+				if (at->self->UniqueID == e->UniqueID)
+				{
+					Appointment* tmp= new Appointment;
+					if (tmp == NULL)
+						exit(1);
+					*tmp = *newAp;
+					tmp->next = e->Calendar;
+					e->Calendar = tmp;
+				}
 			}
 		}
-	}
 
 }
 
@@ -375,10 +401,7 @@ void AddEmployee(Company& com)
 {
 	Employee* emp = new Employee;
 	if (emp == NULL)
-	{
-		std::cout << "Fault in creation\n";
-		exit(1);
-	}
+	exit(1);
 
 	//a random ID will be given
 	emp->UniqueID = inputID(com);
@@ -757,16 +780,18 @@ int main()
 
 	//DeleteEmployee(myCompany, f);
 	//PrintEmployeeDetails(myCompany);
-	std::cout << "Enter a meeting to cancel: \n";
-	std::string a;
-	std::cin >> a;
-	CancelMeeting(myCompany, a);
-	PrintEmployeeDetails(myCompany);
+	//std::cout << "Enter a meeting to cancel: \n";
+	//std::string a;
+	//std::cin >> a;
+	//CancelMeeting(myCompany, a);
+	//PrintEmployeeDetails(myCompany);
 	std::cout << "Enter the day ";
 	int day;
 	std::cin >> day;
 	DeleteAllMeetings(myCompany, day);
-	PrintEmployeeDetails(myCompany);
+	//PrintEmployeeDetails(myCompany);
+
+	UpdateOutputFile("Output", myCompany);
 
 	return 0;
 }
