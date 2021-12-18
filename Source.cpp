@@ -400,8 +400,14 @@ void DeleteAttendee(Company & com, Employee* del)
 {
 	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
+		if (e->Calendar == NULL) // if employee will not attend any meeting
+			continue;
+
 		for (Appointment* ap = e->Calendar; ap != NULL; ap = ap->next)
 		{
+			if (ap->ListOfAttendees == NULL) //if meeting does not yet have any attendees
+				continue;
+
 			Attendee* tmp, * prev, *cur;
 			if (del->UniqueID == ap->ListOfAttendees->self->UniqueID)
 			{
@@ -482,6 +488,42 @@ void DeleteEmployee(Company& com, int id)
 	toBeDeleted->next->previous = toBeDeleted->previous;
 
 	delete toBeDeleted;
+}
+
+void CancelMeeting(Company& com, std::string delTitle)
+{
+	for (Employee* e = com.Head; e != NULL ; e = e->next)
+	{
+		if (e->Calendar == NULL) //if the employee does not have any meeting
+			continue;
+
+		Appointment* tmp, * prev, * cur;
+		if (delTitle == std::string(e->Calendar->Title))
+		{
+			tmp = e->Calendar->next;
+			delete e->Calendar;
+			e->Calendar = tmp;
+		}
+		else
+			
+			{
+				//if app is not at head
+				prev = NULL;
+				cur = e->Calendar;
+				while (cur != NULL && std::string(cur->Title) != delTitle)
+				{
+					prev = cur;
+					cur = cur->next;
+				}
+
+				if (cur != NULL)
+				{
+					//delete
+					prev->next = cur->next;
+					delete cur;
+				}
+			}	
+	}
 }
 
 //only used to print date in appropriate format
@@ -687,22 +729,26 @@ int main()
 		std::cout << current->EmailAddress;
 	}
 	
-	//std::cout << "Do you want to add an employee\n";
-	//AddEmployee(myCompany);
+	std::cout << "Do you want to add an employee\n";
+	AddEmployee(myCompany);
 	//std::cout << "Employee added\n";
 
-	//PrintEmployeeDetails(myCompany);
+	PrintEmployeeDetails(myCompany);
 
 	//AddMeeting(myCompany);
 	//std::cout << "Meeting added.............\n";
 	//PrintEmployeeDetails(myCompany);
 
-	std::cout << "enter id to delete employee\n";
-	int f;
-	std::cin >> f;
+	//std::cout << "enter id to delete employee\n";
+	//int f;
+	//std::cin >> f;
 
-	DeleteEmployee(myCompany, f);
+	//DeleteEmployee(myCompany, f);
+	//PrintEmployeeDetails(myCompany);
+	std::cout << "Enter a meeting to cancel: \n";
+	std::string a;
+	std::cin >> a;
+	CancelMeeting(myCompany, a);
 	PrintEmployeeDetails(myCompany);
-
 	return 0;
 }
