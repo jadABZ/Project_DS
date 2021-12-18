@@ -42,7 +42,7 @@ bool CompanyIsEmpty(Company); //function 00
 Company ParseInputFile(std::string); // function 1
 Employee* SearchForEmployee(Company, int); //function 2
 void AddEmployee(Company&); //function 3
-void DeleteEmployee(Company&, Employee); //function 4
+void DeleteEmployee(Company&, int); //function 4
 void AddMeeting(Company&); //function 5
 void CancelMeeting(Company&, Appointment*); //function 6
 void DeleteAllMeetings(Appointment*&, Time); //function 7
@@ -90,6 +90,179 @@ bool AttendeesIsEmpty(Attendee* at)
 	return(at == NULL);
 }
 
+Company ParseInputFile(std::string filename)
+{
+	Company com;
+	std::string line; //the lines from the file will be read into this variable
+	InitializeCompany(com);
+
+	std::ifstream inFile;
+	inFile.open(filename + ".txt");
+	if (!inFile) //if input file does not exist
+	{
+		std::ofstream firstTime(filename + ".txt");
+		firstTime.close();
+	}
+
+	Employee* cur;
+
+	std::string id, firstname, lastname, email, meetingTitle, meetingDay, meetingHour, meetingMinute, meetingSecond, meetingDuration, meetingAttendeeID; //these strings are used to temporarily store components from the input file
+
+	//start by populating the the head of the company
+	if (CompanyIsEmpty(com))
+	{
+		//create temporary employee
+		cur = new Employee;
+		if (cur == NULL)
+			exit(1);
+		cur->next = NULL;
+		cur->previous = NULL;
+
+		getline(inFile, line);
+		std::stringstream ss(line);
+
+		std::getline(ss, id, ',');
+		std::getline(ss, firstname, ',');
+		std::getline(ss, lastname, ',');
+		std::getline(ss, email, '#');
+		//now convert the strings into the convenient types and place them to their employee
+		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
+		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
+		strcpy(cur->LastName, lastname.c_str());
+		strcpy(cur->EmailAddress, email.c_str());
+
+		InitializeCalendar(cur->Calendar);
+		while (getline(ss, meetingTitle, '|') && meetingTitle != "mmm")
+		{
+			Appointment* tmpCal = new Appointment;
+			if (tmpCal == NULL)
+				exit(1);
+			tmpCal->next = NULL;
+
+			getline(ss, meetingDay, ',');
+			getline(ss, meetingHour, ',');
+			getline(ss, meetingMinute, ',');
+			getline(ss, meetingSecond, ',');
+			getline(ss, meetingDuration, '!');
+
+			strcpy(tmpCal->Title, meetingTitle.c_str());
+			tmpCal->StartingTime.Day = stoi(meetingDay);
+			tmpCal->StartingTime.Hour = stoi(meetingHour);
+			tmpCal->StartingTime.Minute = stoi(meetingMinute);
+			tmpCal->StartingTime.Second = stoi(meetingSecond);
+			tmpCal->Duration = stoi(meetingDuration);
+
+			InitializeAttendees(tmpCal->ListOfAttendees, cur);
+
+			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
+			{
+
+				Attendee* tmpAt = new Attendee;
+				if (tmpAt == NULL)
+					exit(1);
+				Employee* tmpEm = new Employee;
+				if (tmpEm == NULL)
+					exit(1);
+				tmpEm->UniqueID = stoi(meetingAttendeeID);
+				tmpAt->self = tmpEm;
+				tmpAt->next = tmpCal->ListOfAttendees;
+				tmpCal->ListOfAttendees = tmpAt;
+			}
+			tmpCal->next = cur->Calendar;
+			cur->Calendar = tmpCal;
+
+		}
+
+		com.Head = cur;
+		com.Tail = com.Head;
+	} //now we have our first employee in the company
+
+	//then continue the rest of the list
+	while (getline(inFile, line))
+	{
+		cur = new Employee;
+		if (cur == NULL)
+			exit(1);
+		cur->next = NULL;
+		cur->previous = NULL;
+
+		std::stringstream ss(line);
+		std::getline(ss, id, ',');
+		std::getline(ss, firstname, ',');
+		std::getline(ss, lastname, ',');
+		std::getline(ss, email, '#');
+		//now convert the strings into the convenient types and place them to their employee
+		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
+		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
+		strcpy(cur->LastName, lastname.c_str());
+		strcpy(cur->EmailAddress, email.c_str());
+
+		InitializeCalendar(cur->Calendar);
+		while (getline(ss, meetingTitle, '|') && meetingTitle != "mmm")
+		{
+			Appointment* tmpCal = new Appointment;
+			if (tmpCal == NULL)
+				exit(1);
+			tmpCal->next = NULL;
+
+			getline(ss, meetingDay, ',');
+			getline(ss, meetingHour, ',');
+			getline(ss, meetingMinute, ',');
+			getline(ss, meetingSecond, ',');
+			getline(ss, meetingDuration, '!');
+			strcpy(tmpCal->Title, meetingTitle.c_str());
+			tmpCal->StartingTime.Day = stoi(meetingDay);
+			tmpCal->StartingTime.Hour = stoi(meetingHour);
+			tmpCal->StartingTime.Minute = stoi(meetingMinute);
+			tmpCal->StartingTime.Second = stoi(meetingSecond);
+			tmpCal->Duration = stoi(meetingDuration);
+
+			InitializeAttendees(tmpCal->ListOfAttendees, cur);
+
+			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
+			{
+				Attendee* tmpAt = new Attendee;
+				if (tmpAt == NULL)
+					exit(1);
+				Employee* tmpEm = new Employee;
+				if (tmpEm == NULL)
+					exit(1);
+				tmpEm->UniqueID = stoi(meetingAttendeeID);
+				tmpAt->self = tmpEm;
+				tmpAt->next = tmpCal->ListOfAttendees;
+				tmpCal->ListOfAttendees = tmpAt;
+			}
+			tmpCal->next = cur->Calendar;
+			cur->Calendar = tmpCal;
+		}
+
+		cur->previous = com.Tail;
+		com.Tail->next = cur;
+		com.Tail = cur;
+	}
+
+	inFile.close();
+	return com;
+}
+
+Employee* SearchForEmployee(Company c, int id)
+{
+	if (CompanyIsEmpty(c))
+		return NULL;
+
+	Employee* current = c.Head;
+	while (current != NULL)
+	{
+		if (current->UniqueID == id)
+		{
+			return current;
+		}
+
+		current = current->next;
+	}
+	return NULL;
+}
+
 //verify unique ID
 bool IDcheck(Company c, int newID)
 {
@@ -112,164 +285,14 @@ int inputID(Company c)
 
 	srand((unsigned int)time(NULL)); //get more random results
 
-	int id = (1900 + ltm->tm_year)*100000 + rand()%100000; //the id starts with the year the employee was added, followed by 5 random digits
+	int id = (1900 + ltm->tm_year) * 100000 + rand() % 100000; //the id starts with the year the employee was added, followed by 5 random digits
 
-	while(IDcheck(c, id) == false) //ensure given random id doesnt already exist
+	while (IDcheck(c, id) == false) //ensure given random id doesnt already exist
 	{
 		id = rand();
 		return id;
 	}
 	return id;
-}
-
-//only used to print date in appropriate format
-std::string DateFormat(Appointment ap)
-{
-	time_t now = time(0);
-	tm* ltm = localtime(&now);
-
-	
-	const int MAXDAYS = 365;
-	const int MAXDAYSleap = 366;
-
-	//the day of 365 or 366 in which each month ends
-	const int JAN = 31;
-	int FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC;
-
-	std::string date;
-	int  month, day;
-
-	if ((1900 + ltm->tm_year) % 4 != 0)
-	{
-		FEB = 59;
-		MAR = 90;
-		APR = 120;
-		MAY = 151;
-		JUN = 181;
-		JUL = 212;
-		AUG = 243;
-		SEP = 273;
-		OCT = 304;
-		NOV = 334;
-		DEC = 365;
-	}
-	else
-	{
-		FEB = 60;
-		MAR = 91;
-		APR = 121;
-		MAY = 152;
-		JUN = 182;
-		JUL = 213;
-		AUG = 244;
-		SEP = 274;
-		OCT = 305;
-		NOV = 335;
-		DEC = 366;
-	}
-	
-
-	if (ap.StartingTime.Day>=1 && ap.StartingTime.Day <= JAN)
-	{
-		month = 1;
-		day = ap.StartingTime.Day;
-	}		
-	if (ap.StartingTime.Day >= JAN + 1 && ap.StartingTime.Day <= FEB)
-	{
-		month = 2;
-		day = ap.StartingTime.Day - JAN;
-	}
-	if (ap.StartingTime.Day >= FEB + 1 && ap.StartingTime.Day <= MAR)
-	{
-		month = 3;
-		day = ap.StartingTime.Day - FEB;
-	}
-	if (ap.StartingTime.Day >= MAR + 1 && ap.StartingTime.Day <= APR)
-	{
-		month = 4;
-		day = ap.StartingTime.Day - MAR;
-	}
-	if (ap.StartingTime.Day >= APR + 1 && ap.StartingTime.Day <= MAY)
-	{
-		month = 5;
-		day = ap.StartingTime.Day - APR;
-	}
-	if (ap.StartingTime.Day >= MAY + 1 && ap.StartingTime.Day <= JUN)
-	{
-		month = 6;
-		day = ap.StartingTime.Day - MAY;
-	}
-	if (ap.StartingTime.Day >= JUN + 1 && ap.StartingTime.Day <= JUL)
-	{
-		month = 7;
-		day = ap.StartingTime.Day - JUN;
-	}
-	if (ap.StartingTime.Day >= JUL + 1 && ap.StartingTime.Day <= AUG)
-	{
-		month = 8;
-		day = ap.StartingTime.Day - JUL;
-	}
-	if (ap.StartingTime.Day >= AUG + 1 && ap.StartingTime.Day <= SEP)
-	{
-		month = 9;
-		day = ap.StartingTime.Day - AUG;
-	}
-	if (ap.StartingTime.Day >= SEP+ 1 && ap.StartingTime.Day <= OCT)
-	{
-		month = 10;
-		day = ap.StartingTime.Day - SEP;
-	}
-	if (ap.StartingTime.Day >= OCT + 1 && ap.StartingTime.Day <= NOV)
-	{
-		month = 11;
-		day = ap.StartingTime.Day - OCT;
-	}
-	if (ap.StartingTime.Day >= NOV + 1 && ap.StartingTime.Day <= DEC)
-	{
-		month = 12;
-		day = ap.StartingTime.Day - NOV;
-	}
-		
-	date = std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(1900 + ltm->tm_year) + " at ";
-	if (ap.StartingTime.Hour < 10)
-		date += "0" + std::to_string(ap.StartingTime.Hour) + ":";
-	else
-		date += std::to_string(ap.StartingTime.Hour) + ":";
-	if(ap.StartingTime.Minute < 10)
-		date += "0" + std::to_string(ap.StartingTime.Minute) + ":";
-	else
-		date += std::to_string(ap.StartingTime.Minute) + ":";
-	if (ap.StartingTime.Second < 10)
-		date += "0" + std::to_string(ap.StartingTime.Second);
-	else
-		date += std::to_string(ap.StartingTime.Second);
-
-	return date;
-}
-
-std::string DurationFormat(Appointment ap)
-{
-	int hour, minute, second;
-	std::string dur;
-
-	hour = ap.Duration / 3600;
-	minute = (ap.Duration - hour * 3600) / 60;
-	second = ap.Duration - hour *3600 - minute * 60;
-
-	if (hour < 10)
-		dur += "0" + std::to_string(hour) + ":";
-	else
-		dur += std::to_string(hour) + ":";
-	if (minute < 10)
-		dur += "0" + std::to_string(minute) + ":";
-	else
-		dur += std::to_string(minute) + ":";
-	if (second < 10)
-		dur += "0" + std::to_string(second);
-	else
-		dur += std::to_string(second);
-
-	return dur;
 }
 
 void InputAttendees(Company c, Attendee* &head) //the attendees to add to a meeting must be already created in the company
@@ -373,180 +396,243 @@ void AddEmployee(Company& com)
 	com.Head = emp;
 }
 
-
-Company ParseInputFile(std::string filename)
+void DeleteAttendee(Company & com, Employee* del)
 {
-	Company com;
-	std::string line; //the lines from the file will be read into this variable
-	InitializeCompany(com);
-
-	std::ifstream inFile;
-	inFile.open(filename + ".txt");
-	if (!inFile) //if input file does not exist
+	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
-		std::ofstream firstTime(filename + ".txt");
-		firstTime.close();
+		for (Appointment* ap = e->Calendar; ap != NULL; ap = ap->next)
+		{
+			Attendee* tmp, * prev, *cur;
+			if (del->UniqueID == ap->ListOfAttendees->self->UniqueID)
+			{
+				tmp = ap->ListOfAttendees->next;
+				delete ap->ListOfAttendees;
+				ap->ListOfAttendees = tmp;
+				break;
+				
+			}
+			//if attendee is not at head
+			prev = NULL;
+			cur = ap->ListOfAttendees;
+			while (cur != NULL && cur->self->UniqueID != del->UniqueID)		
+			{
+				prev = cur;
+				cur = cur->next;
+			}
+
+			if (cur != NULL)
+			{
+				//delete
+				prev->next = cur->next;
+				delete cur;
+			}
+			
+		}
 	}
+}
 
-	Employee* cur;
-
-	std::string id, firstname, lastname, email, meetingTitle, meetingDay, meetingHour, meetingMinute, meetingSecond, meetingDuration, meetingAttendeeID; //these strings are used to temporarily store components from the input file
-
-	//start by populating the the head of the company
+void DeleteEmployee(Company& com, int id)
+{
 	if (CompanyIsEmpty(com))
 	{
-		//create temporary employee
-		cur = new Employee;
-		if (cur == NULL)
-			exit(1);
-		cur->next = NULL;
-		cur->previous = NULL;
+		std::cout << "Company is empty";
+		return;
+	}	
 
-		getline(inFile, line);
-		std::stringstream ss(line);
+	Employee* toBeDeleted = new Employee;
+	if (toBeDeleted == NULL)
+		exit(1);
+	toBeDeleted = NULL;
 
-		std::getline(ss, id, ',');
-		std::getline(ss, firstname, ',');
-		std::getline(ss, lastname, ',');
-		std::getline(ss, email, '#');
-		//now convert the strings into the convenient types and place them to their employee
-		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
-		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
-		strcpy(cur->LastName, lastname.c_str());
-		strcpy(cur->EmailAddress, email.c_str());
-
-		InitializeCalendar(cur->Calendar);
-		while (getline(ss, meetingTitle, '|') && meetingTitle!="mmm")
-		{
-			Appointment* tmpCal = new Appointment;
-			if (tmpCal == NULL)
-				exit(1);
-			tmpCal->next = NULL;
-
-				getline(ss, meetingDay, ',');
-				getline(ss, meetingHour, ',');
-				getline(ss, meetingMinute, ',');
-				getline(ss, meetingSecond, ',');
-				getline(ss, meetingDuration, '!');
-
-				strcpy(tmpCal->Title, meetingTitle.c_str());
-				tmpCal->StartingTime.Day = stoi(meetingDay);
-				tmpCal->StartingTime.Hour = stoi(meetingHour);
-				tmpCal->StartingTime.Minute = stoi(meetingMinute);
-				tmpCal->StartingTime.Second = stoi(meetingSecond);
-				tmpCal->Duration = stoi(meetingDuration);
-
-				InitializeAttendees(tmpCal->ListOfAttendees, cur);
-
-				while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) !=0)
-				{
-
-					Attendee* tmpAt = new Attendee;
-					if (tmpAt == NULL)
-						exit(1);
-					Employee* tmpEm = new Employee;
-					if (tmpEm == NULL)
-						exit(1);
-					tmpEm->UniqueID = stoi(meetingAttendeeID);
-					tmpAt->self = tmpEm;
-					tmpAt->next = tmpCal->ListOfAttendees;
-					tmpCal->ListOfAttendees = tmpAt;
-				}
-				tmpCal->next = cur->Calendar;
-				cur->Calendar = tmpCal;
-
-		}
-
-			com.Head = cur;
-			com.Tail = com.Head;
-	} //now we have our first employee in the company
-
-	//then continue the rest of the list
-	while (getline(inFile, line))
+	toBeDeleted = SearchForEmployee(com, id);
+	if (toBeDeleted == NULL)
 	{
-		cur = new Employee;
-		if (cur == NULL)
-			exit(1);
-		cur->next = NULL;
-		cur->previous = NULL;
+		std::cout << "ID does not belong to any existing employee\n";
+		return;
+	}
+	
+	//now delete this employee from all appointments
+	DeleteAttendee(com, toBeDeleted);
 
-		std::stringstream ss(line);
-		std::getline(ss, id, ',');
-		std::getline(ss, firstname, ',');
-		std::getline(ss, lastname, ',');
-		std::getline(ss, email, '#');
-		//now convert the strings into the convenient types and place them to their employee
-		cur->UniqueID = stoi(id); //std::stoi takes a string as parameter and returns it as int
-		strcpy(cur->FirstName, firstname.c_str()); //strcpy converts string into an array of char
-		strcpy(cur->LastName, lastname.c_str());
-		strcpy(cur->EmailAddress, email.c_str());
+	Employee *cur;
 
-		InitializeCalendar(cur->Calendar);
-		while (getline(ss, meetingTitle, '|') && meetingTitle!="mmm")
-		{
-			Appointment* tmpCal = new Appointment;
-			if (tmpCal == NULL)
-				exit(1);
-			tmpCal->next = NULL;
+	//delete head
+	if (toBeDeleted == com.Head)
+	{
+		cur = com.Head->next;
+		delete com.Head;
+		com.Head = cur;
+		com.Head->previous = NULL;
+		return;
+	}
 
-			getline(ss, meetingDay, ',');
-			getline(ss, meetingHour, ',');
-			getline(ss, meetingMinute, ',');
-			getline(ss, meetingSecond, ',');
-			getline(ss, meetingDuration, '!');
-			strcpy(tmpCal->Title, meetingTitle.c_str());
-			tmpCal->StartingTime.Day = stoi(meetingDay);
-			tmpCal->StartingTime.Hour = stoi(meetingHour);
-			tmpCal->StartingTime.Minute = stoi(meetingMinute);
-			tmpCal->StartingTime.Second = stoi(meetingSecond);
-			tmpCal->Duration = stoi(meetingDuration);
-
-			InitializeAttendees(tmpCal->ListOfAttendees, cur);
-
-			while (getline(ss, meetingAttendeeID, ',') && stoi(meetingAttendeeID) != 0)
-			{
-				Attendee* tmpAt = new Attendee;
-				if (tmpAt == NULL)
-					exit(1);
-				Employee* tmpEm = new Employee;
-				if (tmpEm == NULL)
-					exit(1);
-				tmpEm->UniqueID = stoi(meetingAttendeeID);
-				tmpAt->self = tmpEm;
-				tmpAt->next = tmpCal->ListOfAttendees;
-				tmpCal->ListOfAttendees = tmpAt;
-			}
-			tmpCal->next = cur->Calendar;
-			cur->Calendar = tmpCal;
-		}
-
-		cur->previous = com.Tail;
-		com.Tail->next = cur;
+	//delete tail
+	if (toBeDeleted == com.Tail)
+	{
+		cur = com.Tail->previous;
+		delete com.Tail;
 		com.Tail = cur;
+		com.Tail->next = NULL;
+		return;
 	}
 
-	inFile.close();
-	return com;
+	//delete other than head or tail
+	Employee* prev = toBeDeleted->previous;
+	prev->next = toBeDeleted->next;
+	toBeDeleted->next->previous = toBeDeleted->previous;
+
+	delete toBeDeleted;
 }
 
-Employee* SearchForEmployee(Company c, int id)
+//only used to print date in appropriate format
+std::string DateFormat(Appointment ap)
 {
-	if (CompanyIsEmpty(c))
-		return NULL;
+	time_t now = time(0);
+	tm* ltm = localtime(&now);
 
-	Employee* current = c.Head;
-	while (current != NULL)
+
+	const int MAXDAYS = 365;
+	const int MAXDAYSleap = 366;
+
+	//the day of 365 or 366 in which each month ends
+	const int JAN = 31;
+	int FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC;
+
+	std::string date;
+	int  month{}, day{};
+
+	if ((1900 + ltm->tm_year) % 4 != 0)
 	{
-		if (current->UniqueID == id)
-		{
-			return current;
-		}
-
-		current = current->next;
+		FEB = 59;
+		MAR = 90;
+		APR = 120;
+		MAY = 151;
+		JUN = 181;
+		JUL = 212;
+		AUG = 243;
+		SEP = 273;
+		OCT = 304;
+		NOV = 334;
+		DEC = 365;
 	}
-	return NULL;
+	else
+	{
+		FEB = 60;
+		MAR = 91;
+		APR = 121;
+		MAY = 152;
+		JUN = 182;
+		JUL = 213;
+		AUG = 244;
+		SEP = 274;
+		OCT = 305;
+		NOV = 335;
+		DEC = 366;
+	}
+
+
+	if (ap.StartingTime.Day >= 1 && ap.StartingTime.Day <= JAN)
+	{
+		month = 1;
+		day = ap.StartingTime.Day;
+	}
+	if (ap.StartingTime.Day >= JAN + 1 && ap.StartingTime.Day <= FEB)
+	{
+		month = 2;
+		day = ap.StartingTime.Day - JAN;
+	}
+	if (ap.StartingTime.Day >= FEB + 1 && ap.StartingTime.Day <= MAR)
+	{
+		month = 3;
+		day = ap.StartingTime.Day - FEB;
+	}
+	if (ap.StartingTime.Day >= MAR + 1 && ap.StartingTime.Day <= APR)
+	{
+		month = 4;
+		day = ap.StartingTime.Day - MAR;
+	}
+	if (ap.StartingTime.Day >= APR + 1 && ap.StartingTime.Day <= MAY)
+	{
+		month = 5;
+		day = ap.StartingTime.Day - APR;
+	}
+	if (ap.StartingTime.Day >= MAY + 1 && ap.StartingTime.Day <= JUN)
+	{
+		month = 6;
+		day = ap.StartingTime.Day - MAY;
+	}
+	if (ap.StartingTime.Day >= JUN + 1 && ap.StartingTime.Day <= JUL)
+	{
+		month = 7;
+		day = ap.StartingTime.Day - JUN;
+	}
+	if (ap.StartingTime.Day >= JUL + 1 && ap.StartingTime.Day <= AUG)
+	{
+		month = 8;
+		day = ap.StartingTime.Day - JUL;
+	}
+	if (ap.StartingTime.Day >= AUG + 1 && ap.StartingTime.Day <= SEP)
+	{
+		month = 9;
+		day = ap.StartingTime.Day - AUG;
+	}
+	if (ap.StartingTime.Day >= SEP + 1 && ap.StartingTime.Day <= OCT)
+	{
+		month = 10;
+		day = ap.StartingTime.Day - SEP;
+	}
+	if (ap.StartingTime.Day >= OCT + 1 && ap.StartingTime.Day <= NOV)
+	{
+		month = 11;
+		day = ap.StartingTime.Day - OCT;
+	}
+	if (ap.StartingTime.Day >= NOV + 1 && ap.StartingTime.Day <= DEC)
+	{
+		month = 12;
+		day = ap.StartingTime.Day - NOV;
+	}
+
+	date = std::to_string(day) + "/" + std::to_string(month) + "/" + std::to_string(1900 + ltm->tm_year) + " at ";
+	if (ap.StartingTime.Hour < 10)
+		date += "0" + std::to_string(ap.StartingTime.Hour) + ":";
+	else
+		date += std::to_string(ap.StartingTime.Hour) + ":";
+	if (ap.StartingTime.Minute < 10)
+		date += "0" + std::to_string(ap.StartingTime.Minute) + ":";
+	else
+		date += std::to_string(ap.StartingTime.Minute) + ":";
+	if (ap.StartingTime.Second < 10)
+		date += "0" + std::to_string(ap.StartingTime.Second);
+	else
+		date += std::to_string(ap.StartingTime.Second);
+
+	return date;
 }
 
+std::string DurationFormat(Appointment ap)
+{
+	int hour, minute, second;
+	std::string dur;
+
+	hour = ap.Duration / 3600;
+	minute = (ap.Duration - hour * 3600) / 60;
+	second = ap.Duration - hour * 3600 - minute * 60;
+
+	if (hour < 10)
+		dur += "0" + std::to_string(hour) + ":";
+	else
+		dur += std::to_string(hour) + ":";
+	if (minute < 10)
+		dur += "0" + std::to_string(minute) + ":";
+	else
+		dur += std::to_string(minute) + ":";
+	if (second < 10)
+		dur += "0" + std::to_string(second);
+	else
+		dur += std::to_string(second);
+
+	return dur;
+}
 
 void PrintEmployeeDetails(Company myCompany)
 {
@@ -601,14 +687,21 @@ int main()
 		std::cout << current->EmailAddress;
 	}
 	
-	std::cout << "Do you want to add an employee\n";
-	AddEmployee(myCompany);
-	AddEmployee(myCompany);
+	//std::cout << "Do you want to add an employee\n";
+	//AddEmployee(myCompany);
+	//std::cout << "Employee added\n";
 
-	PrintEmployeeDetails(myCompany);
+	//PrintEmployeeDetails(myCompany);
 
-	AddMeeting(myCompany);
-	std::cout << "Meeting added.............\n";
+	//AddMeeting(myCompany);
+	//std::cout << "Meeting added.............\n";
+	//PrintEmployeeDetails(myCompany);
+
+	std::cout << "enter id to delete employee\n";
+	int f;
+	std::cin >> f;
+
+	DeleteEmployee(myCompany, f);
 	PrintEmployeeDetails(myCompany);
 
 	return 0;
