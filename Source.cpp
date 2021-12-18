@@ -45,7 +45,7 @@ void AddEmployee(Company&); //function 3
 void DeleteEmployee(Company&, int); //function 4
 void AddMeeting(Company&); //function 5
 void CancelMeeting(Company&, Appointment*); //function 6
-void DeleteAllMeetings(Appointment*&, Time); //function 7
+void DeleteAllMeetings(Company&, int); //function 7
 Time ProposeMeetingSchedule(Employee*, Time); //function 8; return type: array of time(timeslots),,, the argument is the minimum duration
 void UpdateOutputFile(std::string, Company); //function 9
 
@@ -526,6 +526,18 @@ void CancelMeeting(Company& com, std::string delTitle)
 	}
 }
 
+void DeleteAllMeetings(Company &com, int dayLim)
+{
+	for (Employee* e = com.Head; e != NULL; e = e->next)
+	{
+		if (e->Calendar == NULL) //if the employee does not have any meeting
+			continue;
+
+			if (e->Calendar->StartingTime.Day <= dayLim)
+				CancelMeeting(com, std::string(e->Calendar->Title));
+	}
+}
+
 //only used to print date in appropriate format
 std::string DateFormat(Appointment ap)
 {
@@ -735,9 +747,9 @@ int main()
 
 	PrintEmployeeDetails(myCompany);
 
-	//AddMeeting(myCompany);
-	//std::cout << "Meeting added.............\n";
-	//PrintEmployeeDetails(myCompany);
+	AddMeeting(myCompany);
+	std::cout << "Meeting added.............\n";
+	PrintEmployeeDetails(myCompany);
 
 	//std::cout << "enter id to delete employee\n";
 	//int f;
@@ -750,5 +762,11 @@ int main()
 	std::cin >> a;
 	CancelMeeting(myCompany, a);
 	PrintEmployeeDetails(myCompany);
+	std::cout << "Enter the day ";
+	int day;
+	std::cin >> day;
+	DeleteAllMeetings(myCompany, day);
+	PrintEmployeeDetails(myCompany);
+
 	return 0;
 }
