@@ -5,6 +5,7 @@
 #include <cstring>
 #include <stdlib.h> // use rand()
 #include<ctime> //use time functions
+#include <iomanip>
 
 struct Appointment;
 struct Time
@@ -275,6 +276,24 @@ Employee* SearchForEmployee(Company c, int id)
 	while (current != NULL)
 	{
 		if (current->UniqueID == id)
+		{
+			return current;
+		}
+
+		current = current->next;
+	}
+	return NULL;
+}
+
+Employee* SearchByEmail(Company c, std::string email)
+{
+	if (CompanyIsEmpty(c))
+		return NULL;
+
+	Employee* current = c.Head;
+	while (current != NULL)
+	{
+		if (std::string(current->EmailAddress) == email)
 		{
 			return current;
 		}
@@ -711,7 +730,7 @@ std::string DurationFormat(Appointment ap)
 	return dur;
 }
 
-void PrintEmployeeDetails(Company myCompany)
+void PrintCompanyDetails(Company myCompany)
 {
 	for (Employee* counter = myCompany.Head; counter != NULL; counter = counter->next)
 	{
@@ -739,6 +758,32 @@ void PrintEmployeeDetails(Company myCompany)
 	}
 }
 
+void PrintEmployeeDetails(Employee* counter)
+{
+	std::cout << counter->UniqueID << std::endl;
+	std::cout << counter->FirstName << std::endl;
+	std::cout << counter->LastName << std::endl;
+	std::cout << counter->EmailAddress << std::endl;
+	std::cout << "Will attend the following meetings:\n";
+	std::cout << "\n--\n";
+	for (Appointment* j = counter->Calendar; j != NULL; j = j->next)
+	{
+		std::cout << j->Title << std::endl;
+		std::cout << "Meeting date: " << DateFormat(*j) << "(local time) ";
+		std::cout << "Duration: " << DurationFormat(*j) << std::endl;
+		;			std::cout << "Meeting Attendees:\n";
+		for (Attendee* i = j->ListOfAttendees; i != NULL; i = i->next)
+		{
+			std::cout << i->self->UniqueID << " ";
+		}
+		std::cout << "\n--\n";
+	}
+
+
+	std::cout << "----------------------------------\n";
+
+}
+
 int main()
 {
 	std::string filename = "Input";
@@ -746,50 +791,149 @@ int main()
 
 	myCompany = ParseInputFile(filename);
 
-	PrintEmployeeDetails(myCompany);
+	PrintCompanyDetails(myCompany);
 
-	int id;
-	std::cout << "Enter an id: ";
-	std::cin >> id;
-	if (SearchForEmployee(myCompany, id) == NULL)
+	std::cout << std::setw(70) << "---------------------------" << std::endl;
+	std::cout << std::setw(70) << "myCompany Management System" << std::endl;
+	std::cout << std::setw(70) << "---------------------------" << std::endl;
+
+	std::cout << std::setw(67) << "---------------------" << std::endl;
+	std::cout << std::setw(68) << "1-Search for an Employee" << std::endl;
+	std::cout << std::setw(61) << "2-Add an Employee" << std::endl;
+	std::cout << std::setw(64) << "3-Delete an Employee" << std::endl;
+	std::cout << std::setw(59) << "4-Add a Meeting" << std::endl;
+	std::cout << std::setw(62) << "5-Cancel a Meeting" << std::endl;
+	std::cout << std::setw(84) << "6-Cancel all Meetings before a given day" << std::endl;
+	std::cout << std::setw(70) << "7-*Function 8 Coming soon*" << std::endl;
+	std::cout << std::setw(67) << "8-Print company details" << std::endl;
+	std::cout << std::setw(55) << "0-Exit Menu" << std::endl;
+	std::cout << std::setw(67) << "---------------------" << std::endl;
+
+	char c = 'y';
+	do 
 	{
-		if (CompanyIsEmpty(myCompany))
-			std::cout << "The company is empty\n";
-		else
-			std::cout << "Employee not found\n";
-	}
-	else
-	{
-		Employee* current = SearchForEmployee(myCompany, id);
-		std::cout << current->EmailAddress;
-	}
-	
-	std::cout << "Do you want to add an employee\n";
-	AddEmployee(myCompany);
-	//std::cout << "Employee added\n";
+		int choice;
+		std::cout << "Please input your choice from the above menu: ";
+		while (!(std::cin >> choice))
+		{
+			std::cout << "Please input your choice from the above menu: ";
+			std::cin.clear();
+			std::cin.ignore(100, '\n');
+		}
 
-	PrintEmployeeDetails(myCompany);
+		while (choice != 1 && choice != 2 && choice != 3 && choice != 4 && choice != 5 && choice != 6 && choice != 7 && choice != 8 && choice != 0)
+		{
+			std::cout << "Invalid choice. Please input your choice from the above menu: ";
+			std::cin >> choice;
+		}
 
-	AddMeeting(myCompany);
-	std::cout << "Meeting added.............\n";
-	PrintEmployeeDetails(myCompany);
+		switch (choice)
+		{
+		case 1:
+		{
+			char s;
+			std::cout << "a-Search by ID	b-Search by email\n";
+			std::cin >> s;
+			if (s == 'a')
+			{
+				int id;
+				std::cout << "Enter an id: ";
+				std::cin >> id;
+				if (SearchForEmployee(myCompany, id) == NULL)
+				{
+					if (CompanyIsEmpty(myCompany))
+						std::cout << "The company is empty\n";
+					else
+						std::cout << "Employee not found\n";
+				}
+				else
+				{
+					Employee* current = SearchForEmployee(myCompany, id);
+					PrintEmployeeDetails(current);
+				}
+				break;
+			}
+			
+			if (s == 'b')
+			{
+				std::string email;
+				std::cout << "Enter a email: ";
+				std::cin >> email;
+				if (SearchByEmail(myCompany, email) == NULL)
+				{
+					if (CompanyIsEmpty(myCompany))
+						std::cout << "The company is empty\n";
+					else
+						std::cout << "Employee not found\n";
+				}
+				else
+				{
+					Employee* current = SearchByEmail(myCompany, email);
+					PrintEmployeeDetails(current);
+				}
+				break;
+			}
+			
+		}
+		case 2:
+		{
+			AddEmployee(myCompany);
+			std::cout << "Employee added\n";
+			break;
+		}
+		case 3:
+		{
+			std::cout << "enter id to delete employee\n";
+			int f;
+			std::cin >> f;
+			DeleteEmployee(myCompany, f);
+			break;
+		}
+		case 4:
+		{
+			std::cout << "If you want to add the list of attendees, you should see the compay details. Do you want to see the compant details?(y/n)\n";
+			char d;
+			std::cin >> d;
+			if (d == 'y')
+				PrintCompanyDetails(myCompany);
+			AddMeeting(myCompany);
+			std::cout << "Meeting added.............\n";
+			break;
+		}
+		case 5:
+		{
+			std::cout << "Enter a meeting to cancel: \n";
+			std::string a;
+			std::cin >> a;
+			CancelMeeting(myCompany, a);
+			break;
+		}
+		case 6:
+		{
+			std::cout << "Enter the day ";
+			int day;
+			std::cin >> day;
+			DeleteAllMeetings(myCompany, day);
+			break;
+		}
+		case 7:
+		{
+			break;
+		}
+		case 8:
+		{
+			PrintCompanyDetails(myCompany);
+		}
+		case 0:
+		{
+			break;
+		}
+		}
 
-	//std::cout << "enter id to delete employee\n";
-	//int f;
-	//std::cin >> f;
-
-	//DeleteEmployee(myCompany, f);
-	//PrintEmployeeDetails(myCompany);
-	//std::cout << "Enter a meeting to cancel: \n";
-	//std::string a;
-	//std::cin >> a;
-	//CancelMeeting(myCompany, a);
-	//PrintEmployeeDetails(myCompany);
-	std::cout << "Enter the day ";
-	int day;
-	std::cin >> day;
-	DeleteAllMeetings(myCompany, day);
-	//PrintEmployeeDetails(myCompany);
+		
+		std::cout << "Do you want tot continue\n";
+		std::cin >> c;
+	} while (c == 'y');
 
 	UpdateOutputFile("Output", myCompany);
 
