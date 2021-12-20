@@ -6,6 +6,7 @@
 #include <stdlib.h> // use rand()
 #include<ctime> //use time functions
 #include <iomanip>
+#include <Windows.h> //use sleep
 
 struct Appointment;
 struct Time
@@ -96,7 +97,7 @@ void UpdateOutputFile(std::string filename, Company com)
 	std::ofstream toFile(filename + ".txt");
 	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
-		toFile << e->UniqueID << "," << e->FirstName << "," << e->LastName << "," << e->EmailAddress<<"#";
+		toFile << e->UniqueID << "," << e->FirstName << "," << e->LastName << "," << e->EmailAddress << "#";
 		for (Appointment* ap = e->Calendar; ap != NULL; ap = ap->next)
 		{
 			toFile << ap->Title << "|" << ap->StartingTime.Day << "," << ap->StartingTime.Hour << "," << ap->StartingTime.Minute << "," << ap->StartingTime.Second << "," << ap->Duration << "!";
@@ -308,7 +309,7 @@ bool IDcheck(Company c, int newID)
 {
 	Employee* cur = c.Head;
 
-	while(cur!=NULL)
+	while (cur != NULL)
 	{
 		if (cur->UniqueID == newID)
 			return false;
@@ -335,7 +336,7 @@ int inputID(Company c)
 	return id;
 }
 
-void InputAttendees(Company c, Attendee* &head) //the attendees to add to a meeting must be already created in the company
+void InputAttendees(Company c, Attendee*& head) //the attendees to add to a meeting must be already created in the company
 {
 	char x;
 	do
@@ -383,48 +384,72 @@ void AddMeeting(Company& c)
 	std::cin >> newAp->Title;
 	std::cout << "Enter the day of the meeting: ";
 	std::cin >> newAp->StartingTime.Day;
+	while (newAp->StartingTime.Day < 1 || newAp->StartingTime.Day>366)
+	{
+		std::cout << "This date is not valid\nTry gain\n";
+		std::cin >> newAp->StartingTime.Day;
+	}
 	std::cout << "Enter the startimg hour: ";
 	std::cin >> newAp->StartingTime.Hour;
+	while (newAp->StartingTime.Hour < 8 || newAp->StartingTime.Hour>17)
+	{
+		std::cout << "This hour is not valid\nTry gain\n";
+		std::cin >> newAp->StartingTime.Hour;
+	}
 	std::cout << "Enter the starting minute: ";
 	std::cin >> newAp->StartingTime.Minute;
+	while (newAp->StartingTime.Minute < 0 || newAp->StartingTime.Minute>59)
+	{
+		std::cout << "This minute is not valid\nTry gain\n";
+		std::cin >> newAp->StartingTime.Minute;
+	}
 	std::cout << "Enter the starting second: ";
 	std::cin >> newAp->StartingTime.Second;
+	while (newAp->StartingTime.Second < 0 || newAp->StartingTime.Second>59)
+	{
+		std::cout << "This second is not valid\nTry gain\n";
+		std::cin >> newAp->StartingTime.Second;
+	}
 	std::cout << "enter the duration of this meeting: ";
 	std::cin >> newAp->Duration;
+	while (newAp->Duration < 300)
+	{
+		std::cout << "A meeting duration must be at least 300 seconds\nTry gain\n";
+		std::cin >> newAp->Duration;
+	}
 
 	InputAttendees(c, newAp->ListOfAttendees);
 
 	// add the meeting to all the attendees' calendars
 
-	
-		for (Attendee* at = newAp->ListOfAttendees; at != NULL; at = at->next)
+
+	for (Attendee* at = newAp->ListOfAttendees; at != NULL; at = at->next)
+	{
+		for (Employee* e = c.Head; e != NULL; e = e->next)
 		{
-			for (Employee* e = c.Head; e != NULL; e = e->next)	
+			if (at->self->UniqueID == e->UniqueID)
 			{
-				if (at->self->UniqueID == e->UniqueID)
-				{
-					Appointment* tmp= new Appointment;
-					if (tmp == NULL)
-						exit(1);
-					*tmp = *newAp;
-					tmp->next = e->Calendar;
-					e->Calendar = tmp;
-				}
+				Appointment* tmp = new Appointment;
+				if (tmp == NULL)
+					exit(1);
+				*tmp = *newAp;
+				tmp->next = e->Calendar;
+				e->Calendar = tmp;
 			}
 		}
+	}
 
 }
-
 
 void AddEmployee(Company& com)
 {
 	Employee* emp = new Employee;
 	if (emp == NULL)
-	exit(1);
+		exit(1);
 
 	//a random ID will be given
 	emp->UniqueID = inputID(com);
-	
+
 	std::cout << "input the employee first name: ";
 	std::cin >> emp->FirstName;
 	std::cout << "input the employee last name: ";
@@ -438,7 +463,7 @@ void AddEmployee(Company& com)
 	com.Head = emp;
 }
 
-void DeleteAttendee(Company & com, Employee* del)
+void DeleteAttendee(Company& com, Employee* del)
 {
 	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
@@ -450,19 +475,19 @@ void DeleteAttendee(Company & com, Employee* del)
 			if (ap->ListOfAttendees == NULL) //if meeting does not yet have any attendees
 				continue;
 
-			Attendee* tmp, * prev, *cur;
+			Attendee* tmp, * prev, * cur;
 			if (del->UniqueID == ap->ListOfAttendees->self->UniqueID)
 			{
 				tmp = ap->ListOfAttendees->next;
 				delete ap->ListOfAttendees;
 				ap->ListOfAttendees = tmp;
 				break;
-				
+
 			}
 			//if attendee is not at head
 			prev = NULL;
 			cur = ap->ListOfAttendees;
-			while (cur != NULL && cur->self->UniqueID != del->UniqueID)		
+			while (cur != NULL && cur->self->UniqueID != del->UniqueID)
 			{
 				prev = cur;
 				cur = cur->next;
@@ -474,7 +499,7 @@ void DeleteAttendee(Company & com, Employee* del)
 				prev->next = cur->next;
 				delete cur;
 			}
-			
+
 		}
 	}
 }
@@ -485,7 +510,7 @@ void DeleteEmployee(Company& com, int id)
 	{
 		std::cout << "Company is empty";
 		return;
-	}	
+	}
 
 	Employee* toBeDeleted = new Employee;
 	if (toBeDeleted == NULL)
@@ -498,11 +523,11 @@ void DeleteEmployee(Company& com, int id)
 		std::cout << "ID does not belong to any existing employee\n";
 		return;
 	}
-	
+
 	//now delete this employee from all appointments
 	DeleteAttendee(com, toBeDeleted);
 
-	Employee *cur;
+	Employee* cur;
 
 	//delete head
 	if (toBeDeleted == com.Head)
@@ -534,7 +559,7 @@ void DeleteEmployee(Company& com, int id)
 
 void CancelMeeting(Company& com, std::string delTitle)
 {
-	for (Employee* e = com.Head; e != NULL ; e = e->next)
+	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
 		if (e->Calendar == NULL) //if the employee does not have any meeting
 			continue;
@@ -547,36 +572,36 @@ void CancelMeeting(Company& com, std::string delTitle)
 			e->Calendar = tmp;
 		}
 		else
-			
-			{
-				//if app is not at head
-				prev = NULL;
-				cur = e->Calendar;
-				while (cur != NULL && std::string(cur->Title) != delTitle)
-				{
-					prev = cur;
-					cur = cur->next;
-				}
 
-				if (cur != NULL)
-				{
-					//delete
-					prev->next = cur->next;
-					delete cur;
-				}
-			}	
+		{
+			//if app is not at head
+			prev = NULL;
+			cur = e->Calendar;
+			while (cur != NULL && std::string(cur->Title) != delTitle)
+			{
+				prev = cur;
+				cur = cur->next;
+			}
+
+			if (cur != NULL)
+			{
+				//delete
+				prev->next = cur->next;
+				delete cur;
+			}
+		}
 	}
 }
 
-void DeleteAllMeetings(Company &com, int dayLim)
+void DeleteAllMeetings(Company& com, int dayLim)
 {
 	for (Employee* e = com.Head; e != NULL; e = e->next)
 	{
 		if (e->Calendar == NULL) //if the employee does not have any meeting
 			continue;
 
-			if (e->Calendar->StartingTime.Day <= dayLim)
-				CancelMeeting(com, std::string(e->Calendar->Title));
+		if (e->Calendar->StartingTime.Day <= dayLim)
+			CancelMeeting(com, std::string(e->Calendar->Title));
 	}
 }
 
@@ -730,36 +755,9 @@ std::string DurationFormat(Appointment ap)
 	return dur;
 }
 
-void PrintCompanyDetails(Company myCompany)
-{
-	for (Employee* counter = myCompany.Head; counter != NULL; counter = counter->next)
-	{
-		std::cout << counter->UniqueID << std::endl;
-		std::cout << counter->FirstName << std::endl;
-		std::cout << counter->LastName << std::endl;
-		std::cout << counter->EmailAddress << std::endl;
-		std::cout << "Will attend the following meetings:\n";
-		std::cout << "\n--\n";
-		for (Appointment* j = counter->Calendar; j != NULL; j = j->next)
-		{
-			std::cout << j->Title << std::endl;
-			std::cout << "Meeting date: " << DateFormat(*j) << "(local time) ";
-			std::cout << "Duration: " << DurationFormat(*j) << std::endl;
-;			std::cout << "Meeting Attendees:\n";
-			for (Attendee* i = j->ListOfAttendees; i != NULL; i = i->next)
-			{
-				std::cout << i->self->UniqueID << " ";
-			}
-			std::cout << "\n--\n";
-		}
-
-
-		std::cout << "----------------------------------\n";
-	}
-}
-
 void PrintEmployeeDetails(Employee* counter)
 {
+	Sleep(1000);
 	std::cout << counter->UniqueID << std::endl;
 	std::cout << counter->FirstName << std::endl;
 	std::cout << counter->LastName << std::endl;
@@ -784,6 +782,12 @@ void PrintEmployeeDetails(Employee* counter)
 
 }
 
+void PrintCompanyDetails(Company myCompany)
+{
+	for (Employee* counter = myCompany.Head; counter != NULL; counter = counter->next)
+		PrintEmployeeDetails(counter);
+}
+
 int main()
 {
 	std::string filename = "Input";
@@ -791,27 +795,25 @@ int main()
 
 	myCompany = ParseInputFile(filename);
 
-	PrintCompanyDetails(myCompany);
-
-	std::cout << std::setw(70) << "---------------------------" << std::endl;
-	std::cout << std::setw(70) << "myCompany Management System" << std::endl;
-	std::cout << std::setw(70) << "---------------------------" << std::endl;
-
-	std::cout << std::setw(67) << "---------------------" << std::endl;
-	std::cout << std::setw(68) << "1-Search for an Employee" << std::endl;
-	std::cout << std::setw(61) << "2-Add an Employee" << std::endl;
-	std::cout << std::setw(64) << "3-Delete an Employee" << std::endl;
-	std::cout << std::setw(59) << "4-Add a Meeting" << std::endl;
-	std::cout << std::setw(62) << "5-Cancel a Meeting" << std::endl;
-	std::cout << std::setw(84) << "6-Cancel all Meetings before a given day" << std::endl;
-	std::cout << std::setw(70) << "7-*Function 8 Coming soon*" << std::endl;
-	std::cout << std::setw(67) << "8-Print company details" << std::endl;
-	std::cout << std::setw(55) << "0-Exit Menu" << std::endl;
-	std::cout << std::setw(67) << "---------------------" << std::endl;
-
 	char c = 'y';
-	do 
+	do
 	{
+		std::cout << std::setw(70) << "---------------------------" << std::endl;
+		std::cout << std::setw(70) << "myCompany Management System" << std::endl;
+		std::cout << std::setw(70) << "---------------------------" << std::endl;
+
+		std::cout << std::setw(67) << "---------------------" << std::endl;
+		std::cout << std::setw(68) << "1-Search for an Employee" << std::endl;
+		std::cout << std::setw(61) << "2-Add an Employee" << std::endl;
+		std::cout << std::setw(64) << "3-Delete an Employee" << std::endl;
+		std::cout << std::setw(59) << "4-Add a Meeting" << std::endl;
+		std::cout << std::setw(62) << "5-Cancel a Meeting" << std::endl;
+		std::cout << std::setw(84) << "6-Cancel all Meetings before a given day" << std::endl;
+		std::cout << std::setw(70) << "7-*Function 8 Coming soon*" << std::endl;
+		std::cout << std::setw(67) << "8-Print company details" << std::endl;
+		std::cout << std::setw(55) << "0-Exit Menu" << std::endl;
+		std::cout << std::setw(67) << "---------------------" << std::endl;
+
 		int choice;
 		std::cout << "Please input your choice from the above menu: ";
 		while (!(std::cin >> choice))
@@ -853,7 +855,7 @@ int main()
 				}
 				break;
 			}
-			
+
 			if (s == 'b')
 			{
 				std::string email;
@@ -873,7 +875,7 @@ int main()
 				}
 				break;
 			}
-			
+
 		}
 		case 2:
 		{
@@ -897,7 +899,7 @@ int main()
 			if (d == 'y')
 				PrintCompanyDetails(myCompany);
 			AddMeeting(myCompany);
-			std::cout << "Meeting added.............\n";
+			//std::cout << "Meeting added.............\n";
 			break;
 		}
 		case 5:
@@ -917,12 +919,50 @@ int main()
 			break;
 		}
 		case 7:
-		{
+		{/*
+			int id;
+			Employee* emp = new Employee;
+			if (emp == NULL)
+				exit(1);
+			emp->next = NULL;
+
+			Employee* empHead = emp;
+
+			std::cout << "Enter the id of the employee, 0 to terminate: ";
+			std::cin >> id;
+			while (id != 0)
+			{
+				if (SearchForEmployee(myCompany, id) == NULL)
+				{
+					std::cout << "This employee does not exist try again\n";
+					continue;
+				}
+
+				emp->UniqueID = id;
+				emp = emp->next;
+				std::cout << "Enter the id of the employee, 0 to terminate: ";
+				std::cin >> id;
+			}
+			emp = empHead;
+
+			//fill the linked list e2 with calendar,,
+			for (Employee* e = myCompany.Head; e != NULL; e = e->next)
+				if (e->UniqueID == emp->UniqueID)
+					emp->Calendar = e->Calendar;
+
+			int duration, day;
+			std::cout << "Enter the day: ";
+			std::cin >> day;
+			std::cout << "Enter the duration: ";
+			std::cin >> duration;
+			ProposeMeetingSchedule(empHead, duration, day);*/
 			break;
 		}
 		case 8:
 		{
 			PrintCompanyDetails(myCompany);
+			std::cout << "----------------------------------\n";
+			std::cout << "----------------------------------\n";
 		}
 		case 0:
 		{
@@ -930,8 +970,8 @@ int main()
 		}
 		}
 
-		
-		std::cout << "Do you want tot continue\n";
+
+		std::cout << "Do you want to continue\n";
 		std::cin >> c;
 	} while (c == 'y');
 
